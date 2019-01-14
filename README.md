@@ -11,8 +11,10 @@ What if you could run ZAP in a lambda? That would be cool? This first POC spider
 ## Try it out
 - Create the package, run `./build.sh`
   - The artifact will be created in `_builds/zap-aws-*.zip`
+- Create s3 bucket with `zap-bucket-name` to dump ZAP results
 - Deploy lambda
   - **Magically**
+    -  if using `aws-okta` comment out the `AWS_PROFILE` in `deploy.sh` 
     - `./deploy.sh zap-bucket-name`
   - **Manually**
     - Upload the artifact to a new/existing s3 bucket
