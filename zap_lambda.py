@@ -98,6 +98,7 @@ def run_scan(config):
 	z.zap_wait_for_passive_scan(zap, config.timeout * 60)
 	alerts = z.zap_get_alerts(zap, config.target, config.blacklist, {})
 	urls = zap.core.urls()
+	htmlreport = zap.core.htmlreport()
 
 	# Cleanup alerts and remove nodes
  	zap.core.delete_all_alerts()
@@ -111,7 +112,7 @@ def run_scan(config):
  		"config": config.as_dict(),
  		"urls": urls,
 	    "alerts": alerts,
- 	}, zap
+ 	}, htmlreport, zap
 
 def handler(event, context):
 	try:
@@ -131,7 +132,7 @@ def handler(event, context):
 			}
 
 		print("About to run scan")
-		report, zap = run_scan(config)
+		report, htmlreport, zap = run_scan(config)
 	 	
 	 	print("Getting s3 client")
 	 	s3 = get_s3_client()
@@ -145,7 +146,7 @@ def handler(event, context):
 	        'zap_version': zap.core.version,
 	 	}
 
-		print("Saving report to s3")
+		print("Saving json report to s3")
 	 	response = s3.put_object(Body=json.dumps(report), Bucket=bucket, Key=key, ACL='private', Metadata=meta)
 
 	 	if response.get('ResponseMetadata', {}).get('HTTPStatusCode') not in [200, "200"]:
@@ -153,6 +154,17 @@ def handler(event, context):
 	 			"success": False,
 	 			"messages": ["Could not save report to bucket %s" % bucket]
 	 		}
+
+		key = "%s/%s/%s.html" % (prefix, config.target_hash(), report['start'])
+		print("Saving html report to s3")
+		response = s3.put_object(Body=htmlreport, Bucket=bucket, Key=key, ACL='private', Metadata=meta)
+
+		if response.get('ResponseMetadata', {}).get('HTTPStatusCode') not in [200, "200"]:
+			return {
+				"success": False,
+				"messages": ["Could not save html report to bucket %s" % bucket]
+			}
+
 
 		return {
 		    "success": True,

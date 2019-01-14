@@ -31,8 +31,9 @@ fi
 
 KEY=$(basename $ARTIFACT)
 
+# comment out if using aws-okta
+# export AWS_PROFILE=personal
 export AWS_DEFAULT_REGION="${REGION}"
-export AWS_PROFILE=personal
 echo '[i] Uploading artifact to s3'
 aws s3 cp "${ARTIFACT}" "s3://${BUCKET}/${KEY}"
 sleep 1
